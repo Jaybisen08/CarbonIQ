@@ -1,0 +1,6 @@
+{
+  "name": "CarbonIQ",
+  "description": "CarbonIQ – A Premium Carbon Footprint Intelligence Platform",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
