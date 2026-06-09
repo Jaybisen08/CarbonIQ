@@ -495,5 +495,188 @@ export const DBStore = {
       return true;
     }
     return false;
+  },
+
+  resetUser(email: string) {
+    const db = readDB();
+    const emailKey = email.toLowerCase();
+    if (db.users[emailKey]) {
+      if (emailKey === DEMO_EMAIL) {
+        // For demo user, reset to original sample dataset
+        delete db.users[emailKey];
+        writeDB(db);
+        // Force re-initialization of demo data
+        const freshDb = readDB();
+        const demoProfile: UserProfile = {
+          firstName: 'Sarah',
+          lastName: 'Chen',
+          age: 28,
+          gender: 'Female',
+          city: 'San Francisco',
+          state: 'California',
+          country: 'United States',
+          email: DEMO_EMAIL,
+          occupation: 'Sustainability Lead',
+          isStudent: false,
+          dietType: 'Vegetarian',
+          householdSize: 2,
+          primaryTransport: 'Electric',
+          prefSustainabilityTips: true,
+          prefEmailNotifications: false,
+          points: 850,
+          badges: ['Grid Explorer', 'Eco Pioneer', 'Challenge Champion'],
+          hasCompletedAssessment: true
+        };
+
+        const demoCalculations: EmissionsBreakdown[] = [
+          {
+            date: 'Jan 2026',
+            transportation: 140,
+            electricity: 180,
+            food: 110,
+            lifestyle: 95,
+            total: 525,
+            sustainabilityScore: 78
+          },
+          {
+            date: 'Feb 2026',
+            transportation: 135,
+            electricity: 165,
+            food: 110,
+            lifestyle: 90,
+            total: 500,
+            sustainabilityScore: 80
+          },
+          {
+            date: 'Mar 2026',
+            transportation: 110,
+            electricity: 140,
+            food: 95,
+            lifestyle: 85,
+            total: 430,
+            sustainabilityScore: 84
+          },
+          {
+            date: 'Apr 2026',
+            transportation: 98,
+            electricity: 120,
+            food: 95,
+            lifestyle: 70,
+            total: 383,
+            sustainabilityScore: 87
+          },
+          {
+            date: 'May 2026',
+            transportation: 80,
+            electricity: 105,
+            food: 80,
+            lifestyle: 65,
+            total: 330,
+            sustainabilityScore: 90
+          }
+        ];
+
+        const demoGoals: Goal[] = [
+          {
+            id: 'g-1',
+            title: 'Minimize Laundry Footprint',
+            description: 'Use cold water washes & reduce washer loads to twice per week.',
+            category: 'electricity',
+            targetValue: 45,
+            currentValue: 32,
+            completed: false,
+            deadline: '2026-07-15'
+          },
+          {
+            id: 'g-2',
+            title: 'Meat-Free Fortnight',
+            description: 'Reduce red meat intake entirely for two successive weeks.',
+            category: 'food',
+            targetValue: 30,
+            currentValue: 30,
+            completed: true,
+            deadline: '2026-05-31'
+          }
+        ];
+
+        const demoRecommendations: Recommendation[] = [
+          {
+            id: 'r-1',
+            title: 'Upgrade to Smart Thermostat',
+            description: 'Automate temperature scaling based on occupancy, reducing electrical cooling overhead by 15%.',
+            category: 'electricity',
+            co2Savings: 310,
+            difficulty: 'Easy',
+            impactScore: 82
+          },
+          {
+            id: 'r-2',
+            title: 'Commit to Walk/Car-pooling',
+            description: 'Carpooling for work trips over 15km removes vehicle occupancy load.',
+            category: 'transportation',
+            co2Savings: 580,
+            difficulty: 'Medium',
+            impactScore: 91
+          },
+          {
+            id: 'r-3',
+            title: 'Repurpose Vegetable Scraps',
+            description: 'Making stocks or home-composting food waste eliminates standard landfill methane emissions.',
+            category: 'food',
+            co2Savings: 120,
+            difficulty: 'Easy',
+            impactScore: 68
+          }
+        ];
+
+        freshDb.users[DEMO_EMAIL] = {
+          profile: demoProfile,
+          passwordHash: 'demosecret',
+          calculations: demoCalculations,
+          goals: demoGoals,
+          challenges: [...DEFAULT_CHALLENGES],
+          recommendations: demoRecommendations
+        };
+        freshDb.users[DEMO_EMAIL].challenges[2].joined = true;
+        freshDb.users[DEMO_EMAIL].challenges[3].joined = true;
+        freshDb.users[DEMO_EMAIL].challenges[3].completed = true;
+
+        writeDB(freshDb);
+        return true;
+      }
+
+      db.users[emailKey].calculations = [];
+      db.users[emailKey].recommendations = [];
+      db.users[emailKey].goals = [
+        {
+          id: 'g-init-1',
+          title: 'Reduce flight counts',
+          description: 'Try substituting minor domestic flights with rail transit where available.',
+          category: 'transportation',
+          targetValue: 120,
+          currentValue: 0,
+          completed: false,
+          deadline: '2026-12-31'
+        },
+        {
+          id: 'g-init-2',
+          title: 'Install Energy-Efficient LEDs',
+          description: 'Swap standard high wattage bulbs for sustainable smart energy certified smart LEDs.',
+          category: 'electricity',
+          targetValue: 50,
+          currentValue: 0,
+          completed: false,
+          deadline: '2026-08-30'
+        }
+      ];
+      db.users[emailKey].challenges = [...DEFAULT_CHALLENGES];
+      db.users[emailKey].profile.points = 0;
+      db.users[emailKey].profile.badges = [];
+      db.users[emailKey].profile.hasCompletedAssessment = false;
+      db.users[emailKey].profile.sustainabilityScore = undefined;
+      writeDB(db);
+      return true;
+    }
+    return false;
   }
 };

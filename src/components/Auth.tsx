@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
+import { safeFetchJson } from '../utils/api';
 import { Leaf, ArrowRight, Shield, RefreshCw, Key, Mail, User, MapPin, Briefcase } from 'lucide-react';
 
 interface AuthProps {
@@ -62,10 +63,7 @@ export default function Auth({
         body: JSON.stringify(payload)
       });
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Authentication rejected. Identify credentials.');
-      }
+      const data = await safeFetchJson(response);
 
       onAuthSuccess({
         email: formData.email,

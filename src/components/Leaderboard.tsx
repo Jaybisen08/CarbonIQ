@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LeaderboardEntry } from '../types';
+import { safeFetchJson } from '../utils/api';
 import { Trophy, Award, Shield, User, Search, RefreshCw, Flame, HelpCircle } from 'lucide-react';
 
 interface LeaderboardProps {
@@ -21,10 +22,8 @@ export default function Leaderboard({
     setLoading(true);
     try {
       const response = await fetch(`/api/leaderboard?email=${encodeURIComponent(userEmail)}`);
-      const data = await response.json();
-      if (response.ok) {
-        setBoard(data);
-      }
+      const data = await safeFetchJson<LeaderboardEntry[]>(response);
+      setBoard(data);
     } catch (err) {
       console.error(err);
     } finally {

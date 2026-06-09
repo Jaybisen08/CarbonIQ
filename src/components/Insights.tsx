@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Recommendation, Goal } from '../types';
+import { safeFetchJson } from '../utils/api';
 import { Cpu, Leaf, BrainCircuit, ArrowRight, Zap, Target, Flame, Lightbulb, RefreshCw, Layers, Sparkles, Check } from 'lucide-react';
 
 interface InsightsProps {
@@ -56,12 +57,8 @@ export default function Insights({
         body: JSON.stringify({ email: userEmail })
       });
 
-      const data = await response.json();
+      const data = await safeFetchJson(response);
       clearInterval(logInterval);
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Insights cluster offline.');
-      }
 
       onRecommendationsLoaded(data.recommendations);
     } catch (err: any) {

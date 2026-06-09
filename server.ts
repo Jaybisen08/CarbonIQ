@@ -111,6 +111,19 @@ app.post('/api/auth/profile', (req, res) => {
   res.json(updatedProfile);
 });
 
+app.post('/api/auth/reset', (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+
+  const success = DBStore.resetUser(email);
+  if (success) {
+    return res.json({ success: true, message: 'Simulation database reset successfully.' });
+  }
+  res.status(404).json({ error: 'User not found' });
+});
+
 // Calculations engine
 app.post('/api/calculator/calculate', (req, res) => {
   const { email, calculatorData, date } = req.body;

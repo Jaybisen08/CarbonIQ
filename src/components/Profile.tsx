@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
+import { safeFetchJson } from '../utils/api';
 import { User, Award, Shield, MapPin, Briefcase, Calendar, RefreshCw } from 'lucide-react';
 
 interface ProfileProps {
@@ -46,10 +47,7 @@ export default function Profile({
         })
       });
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Profile update failed.');
-      }
+      const data = await safeFetchJson<UserProfile>(response);
 
       onUpdateProfile(data);
       setSuccessMsg('Profile updated successfully.');

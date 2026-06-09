@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Settings as SettingsIcon, Shield, RefreshCw, Sun, Moon, Info, Key, Database } from 'lucide-react';
+import { safeFetchJson } from '../utils/api';
 
 interface SettingsProps {
   isDarkMode: boolean;
@@ -12,21 +13,33 @@ export default function Settings({
   onToggleTheme,
   userEmail
 }: SettingsProps) {
+  const [resetting, setResetting] = useState(false);
+  const [msg, setMsg] = useState<{ text: string; error: boolean } | null>(null);
   
   const handleResetDatabaseSim = async () => {
-    if (confirm('Are you absolutely sure you want to reset all simulation data for this account? This will rest calculations and challenges.')) {
+    if (confirm('Are you absolutely sure you want to reset all simulation data for this account? This will reset calculations, goals, and challenges.')) {
+      setResetting(true);
+      setMsg(null);
       try {
         const response = await fetch('/api/auth/reset', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: userEmail })
         });
-        if (response.ok) {
-          alert('Database reset successful. Please reload the applet to seed default mock benchmarks.');
-          window.location.reload();
+        const data = await safeFetchJson(response);
+        if (data.success) {
+          setMsg({ text: 'Database reset successful! Reloading application session...', error: false });
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        } else {
+          setMsg({ text: data.error || 'Failed to reset database.', error: true });
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
+        setMsg({ text: err.message || 'Unable to communicate with the server to wipe simulation logs.', error: true });
+      } finally {
+        setResetting(false);
       }
     }
   };
@@ -100,12 +113,19 @@ export default function Settings({
                 
                 <button 
                   onClick={handleResetDatabaseSim}
-                  className="bg-red-500/15 hover:bg-red-500/25 border border-red-500/20 text-red-400 text-[10px] font-semibold py-1.5 px-3 rounded-lg mt-3 flex items-center space-x-1 transition-colors"
+                  disabled={resetting}
+                  className={`bg-red-500/15 hover:bg-red-500/25 border border-red-500/20 text-red-400 text-[10px] font-semibold py-1.5 px-3 rounded-lg mt-3 flex items-center space-x-1 transition-colors ${resetting ? 'opacity-50 cursor-not-allowed' : ''}`}
                   id="btn-settings-reset-db"
                 >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Reset Account Data</span>
+                  <RefreshCw className={`w-3.5 h-3.5 ${resetting ? 'animate-spin' : ''}`} />
+                  <span>{resetting ? 'Resetting...' : 'Reset Account Data'}</span>
                 </button>
+
+                {msg && (
+                  <p className={`text-[11px] mt-2 font-medium ${msg.error ? 'text-red-400' : 'text-emerald-500'}`}>
+                    {msg.text}
+                  </p>
+                )}
               </div>
             </div>
           </div>

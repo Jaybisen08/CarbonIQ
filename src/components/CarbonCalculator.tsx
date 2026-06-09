@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { CarbonCalculatorData, EmissionsBreakdown } from '../types';
+import { safeFetchJson } from '../utils/api';
 import { Car, Zap, Utensils, ShoppingBag, ArrowRight, ArrowLeft, CheckCircle, Calculator, ChevronRight, RefreshCw, Flame, Shield, Award } from 'lucide-react';
 
 interface CarbonCalculatorProps {
@@ -64,10 +65,7 @@ export default function CarbonCalculator({
         })
       });
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Emissions engine failed. Try again.');
-      }
+      const data = await safeFetchJson(response);
 
       setAssessmentResult(data.latestCalculation);
       onCalculationCompleted(data.latestCalculation, data.history);

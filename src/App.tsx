@@ -12,6 +12,7 @@ import Profile from './components/Profile';
 import Settings from './components/Settings';
 import { generateCarbonReport } from './utils/pdfGenerator';
 import { EmissionsBreakdown, UserProfile, Goal, Challenge, Recommendation } from './types';
+import { safeFetchJson } from './utils/api';
 import { 
   Leaf, BarChart3, Cpu, Target, Trophy, Clock, User, 
   Settings as SettingsIcon, LogOut, Menu, X, Shield, RefreshCw 
@@ -70,19 +71,15 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: 'demo@carboniq.com', password: '' })
       });
-      const data = await response.json();
-      if (response.ok) {
-        handleAuthSuccess({
-          email: 'demo@carboniq.com',
-          profile: data.profile,
-          calculations: data.calculations,
-          goals: data.goals,
-          challenges: data.challenges,
-          recommendations: data.recommendations
-        });
-      } else {
-        throw new Error(data.error);
-      }
+      const data = await safeFetchJson(response);
+      handleAuthSuccess({
+        email: 'demo@carboniq.com',
+        profile: data.profile,
+        calculations: data.calculations,
+        goals: data.goals,
+        challenges: data.challenges,
+        recommendations: data.recommendations
+      });
     } catch (err) {
       // Fallback local construct if server call fails
       const localDemo = {
@@ -155,12 +152,10 @@ export default function App() {
           goalData
         })
       });
-      const data = await response.json();
-      if (response.ok) {
-        const updated = { ...currentUser, goals: data };
-        setCurrentUser(updated);
-        localStorage.setItem('authenticated_user', JSON.stringify(updated));
-      }
+      const data = await safeFetchJson(response);
+      const updated = { ...currentUser, goals: data };
+      setCurrentUser(updated);
+      localStorage.setItem('authenticated_user', JSON.stringify(updated));
     } catch (err) {
       console.error(err);
     }
@@ -179,33 +174,32 @@ export default function App() {
           goalData: updates
         })
       });
-      const data = await response.json();
-      if (response.ok) {
-        // If a goal got completed, award points automatically on the user profile!
-        let nextPoints = currentUser.profile.points;
-        if (updates.completed) {
-          nextPoints += 100;
-          await fetch('/api/auth/profile', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: currentUser.email,
-              profileUpdates: { points: nextPoints, badges: [...currentUser.profile.badges, 'Goal Breaker'] }
-            })
-          });
-        }
-
-        const updated = { 
-          ...currentUser, 
-          goals: data,
-          profile: {
-            ...currentUser.profile,
-            points: nextPoints
-          }
-        };
-        setCurrentUser(updated);
-        localStorage.setItem('authenticated_user', JSON.stringify(updated));
+      const data = await safeFetchJson(response);
+      // If a goal got completed, award points automatically on the user profile!
+      let nextPoints = currentUser.profile.points;
+      if (updates.completed) {
+        nextPoints += 100;
+        const profRes = await fetch('/api/auth/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: currentUser.email,
+            profileUpdates: { points: nextPoints, badges: [...currentUser.profile.badges, 'Goal Breaker'] }
+          })
+        });
+        await safeFetchJson(profRes);
       }
+
+      const updated = { 
+        ...currentUser, 
+        goals: data,
+        profile: {
+          ...currentUser.profile,
+          points: nextPoints
+        }
+      };
+      setCurrentUser(updated);
+      localStorage.setItem('authenticated_user', JSON.stringify(updated));
     } catch (err) {
       console.error(err);
     }
@@ -223,12 +217,10 @@ export default function App() {
           goalId
         })
       });
-      const data = await response.json();
-      if (response.ok) {
-        const updated = { ...currentUser, goals: data };
-        setCurrentUser(updated);
-        localStorage.setItem('authenticated_user', JSON.stringify(updated));
-      }
+      const data = await safeFetchJson(response);
+      const updated = { ...currentUser, goals: data };
+      setCurrentUser(updated);
+      localStorage.setItem('authenticated_user', JSON.stringify(updated));
     } catch (err) {
       console.error(err);
     }
@@ -246,12 +238,10 @@ export default function App() {
           challengeId
         })
       });
-      const data = await response.json();
-      if (response.ok) {
-        const updated = { ...currentUser, challenges: data };
-        setCurrentUser(updated);
-        localStorage.setItem('authenticated_user', JSON.stringify(updated));
-      }
+      const data = await safeFetchJson(response);
+      const updated = { ...currentUser, challenges: data };
+      setCurrentUser(updated);
+      localStorage.setItem('authenticated_user', JSON.stringify(updated));
     } catch (err) {
       console.error(err);
     }
@@ -269,12 +259,10 @@ export default function App() {
           challengeId
         })
       });
-      const data = await response.json();
-      if (response.ok) {
-        const updated = { ...currentUser, challenges: data };
-        setCurrentUser(updated);
-        localStorage.setItem('authenticated_user', JSON.stringify(updated));
-      }
+      const data = await safeFetchJson(response);
+      const updated = { ...currentUser, challenges: data };
+      setCurrentUser(updated);
+      localStorage.setItem('authenticated_user', JSON.stringify(updated));
     } catch (err) {
       console.error(err);
     }
@@ -292,33 +280,32 @@ export default function App() {
           challengeId
         })
       });
-      const data = await response.json();
-      if (response.ok) {
-        // Quantify points
-        const targetChallenge = currentUser.challenges.find(c => c.id === challengeId);
-        const ptsGranted = targetChallenge ? targetChallenge.points : 100;
-        const nextPoints = currentUser.profile.points + ptsGranted;
+      const data = await safeFetchJson(response);
+      // Quantify points
+      const targetChallenge = currentUser.challenges.find(c => c.id === challengeId);
+      const ptsGranted = targetChallenge ? targetChallenge.points : 100;
+      const nextPoints = currentUser.profile.points + ptsGranted;
 
-        await fetch('/api/auth/profile', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: currentUser.email,
-            profileUpdates: { points: nextPoints }
-          })
-        });
+      const profRes = await fetch('/api/auth/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: currentUser.email,
+          profileUpdates: { points: nextPoints }
+        })
+      });
+      await safeFetchJson(profRes);
 
-        const updated = { 
-          ...currentUser, 
-          challenges: data,
-          profile: {
-            ...currentUser.profile,
-            points: nextPoints
-          }
-        };
-        setCurrentUser(updated);
-        localStorage.setItem('authenticated_user', JSON.stringify(updated));
-      }
+      const updated = { 
+        ...currentUser, 
+        challenges: data,
+        profile: {
+          ...currentUser.profile,
+          points: nextPoints
+        }
+      };
+      setCurrentUser(updated);
+      localStorage.setItem('authenticated_user', JSON.stringify(updated));
     } catch (err) {
       console.error(err);
     }
