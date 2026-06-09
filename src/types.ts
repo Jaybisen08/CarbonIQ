@@ -18,6 +18,7 @@ export interface UserProfile {
   badges: string[];
   renewableEnergy?: boolean;
   sustainabilityScore?: number;
+  hasCompletedAssessment?: boolean;
 }
 
 export interface CarbonCalculatorData {

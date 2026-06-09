@@ -126,7 +126,8 @@ if (!db.users[DEMO_EMAIL]) {
     prefSustainabilityTips: true,
     prefEmailNotifications: false,
     points: 850,
-    badges: ['Grid Explorer', 'Eco Pioneer', 'Challenge Champion']
+    badges: ['Grid Explorer', 'Eco Pioneer', 'Challenge Champion'],
+    hasCompletedAssessment: true
   };
 
   const demoCalculations: EmissionsBreakdown[] = [
@@ -262,7 +263,10 @@ export const DBStore = {
       throw new Error('Email is already registered');
     }
     db.users[emailKey] = {
-      profile,
+      profile: {
+        ...profile,
+        hasCompletedAssessment: false
+      },
       passwordHash: password, // Store password as string for simplify in sandbox environments
       calculations: [],
       goals: [
@@ -323,6 +327,7 @@ export const DBStore = {
       
       // Update User profile Sustainability Score based on the newest calculation
       db.users[emailKey].profile.sustainabilityScore = calculation.sustainabilityScore;
+      db.users[emailKey].profile.hasCompletedAssessment = true;
       
       writeDB(db);
       return db.users[emailKey].calculations;

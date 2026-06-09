@@ -7,13 +7,15 @@ interface DashboardProps {
   isDarkMode: boolean;
   onNavigate: (view: string) => void;
   userName: string;
+  isDemoMode?: boolean;
 }
 
 export default function Dashboard({
   calculations,
   isDarkMode,
   onNavigate,
-  userName
+  userName,
+  isDemoMode = false
 }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<'all' | 'transport' | 'electricity' | 'food' | 'lifestyle'>('all');
   const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
@@ -45,10 +47,10 @@ export default function Dashboard({
 
   // Emission categories structure 
   const breakdownRatios = [
-    { name: 'Transportation', amount: currentCalc.transportation, color: '#52B788', text: 'Daily driving and airline travel' },
-    { name: 'Electricity', amount: currentCalc.electricity, color: '#74C69D', text: 'HVAC systems and lighting' },
-    { name: 'Diet & Nutrition', amount: currentCalc.food, color: '#40916C', text: 'Groceries, waste and diets' },
-    { name: 'Lifestyle/Comms', amount: currentCalc.lifestyle, color: '#2D6A4F', text: 'Shopping and home appliances' }
+    { name: 'Transportation', amount: currentCalc.transportation, color: '#2563EB', text: 'Daily driving and airline travel' },
+    { name: 'Electricity', amount: currentCalc.electricity, color: '#06B6D4', text: 'HVAC systems and lighting' },
+    { name: 'Diet & Nutrition', amount: currentCalc.food, color: '#22C55E', text: 'Groceries, waste and diets' },
+    { name: 'Lifestyle/Comms', amount: currentCalc.lifestyle, color: '#8B5CF6', text: 'Shopping and home appliances' }
   ];
 
   const totalSum = breakdownRatios.reduce((acc, r) => acc + r.amount, 0) || 1;
@@ -117,8 +119,8 @@ export default function Dashboard({
           {/* Subtle definitions */}
           <defs>
             <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#52B788" stopOpacity="0.16" />
-              <stop offset="100%" stopColor="#52B788" stopOpacity="0.00" />
+              <stop offset="0%" stopColor="#2563EB" stopOpacity="0.16" />
+              <stop offset="100%" stopColor="#2563EB" stopOpacity="0.00" />
             </linearGradient>
           </defs>
 
@@ -154,7 +156,7 @@ export default function Dashboard({
           <path d={areaObj} fill="url(#areaGrad)" />
 
           {/* Render Main Curve Line */}
-          <path d={pathObj} fill="none" stroke="#52B788" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d={pathObj} fill="none" stroke="#2563EB" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
 
           {/* Highlight Circles on curve */}
           {calculations.map((c, idx) => {
@@ -171,14 +173,14 @@ export default function Dashboard({
               >
                 {/* Big glow marker if hovered */}
                 {isHovered && (
-                  <circle cx={x} cy={y} r="8" fill="#52B788" fillOpacity="0.3" className="animate-ping" />
+                  <circle cx={x} cy={y} r="8" fill="#2563EB" fillOpacity="0.3" className="animate-ping" />
                 )}
                 <circle 
                   cx={x} 
                   cy={y} 
                   r={isHovered ? '5' : '3.5'} 
-                  fill={isDarkMode ? '#081C15' : '#ffffff'} 
-                  stroke="#52B788" 
+                  fill={isDarkMode ? '#09090B' : '#ffffff'} 
+                  stroke="#2563EB" 
                   strokeWidth="2.5" 
                 />
                 
@@ -214,7 +216,7 @@ export default function Dashboard({
                 <span className="text-gray-400">Total footprint:</span>
                 <span className="font-bold">{calculations[hoveredPoint].total} kg CO₂</span>
               </div>
-              <div className="flex justify-between gap-4 text-emerald-400 text-[10px]">
+              <div className="flex justify-between gap-4 text-brand-primary text-[10px]">
                 <span>Score index:</span>
                 <span className="font-bold">{calculations[hoveredPoint].sustainabilityScore}/100</span>
               </div>
@@ -227,6 +229,24 @@ export default function Dashboard({
 
   return (
     <div className="space-y-8" id="dashboard-view">
+      
+      {isDemoMode && (
+        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-left animate-pulse" id="demo-mode-headline-banner">
+          <div className="flex items-center space-x-3">
+            <Info className="w-5 h-5 text-amber-500" />
+            <div>
+              <p className="font-display font-semibold text-sm text-amber-500/95">Demo Mode Active</p>
+              <p className="text-xs text-amber-500/75">Demo Mode - This data is for demonstration purposes only.</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => onNavigate('profile')}
+            className="text-xs bg-brand-primary hover:bg-brand-accent text-brand-dark-bg font-bold py-1.5 px-3 rounded-lg shadow-sm transition-all self-start sm:self-auto uppercase tracking-wider"
+          >
+            Register / Sign Up
+          </button>
+        </div>
+      )}
       
       {/* Banner / Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4" id="dash-heading">
@@ -248,11 +268,23 @@ export default function Dashboard({
           </button>
           
           <button 
-            onClick={() => onNavigate('reports')}
-            className={`text-xs font-semibold py-2.5 px-4 rounded-lg border transition-all ${isDarkMode ? 'border-brand-dark-surface hover:bg-brand-dark-surface text-white' : 'border-gray-200 hover:bg-gray-100 text-gray-700'}`}
+            onClick={() => {
+              if (hasData) {
+                onNavigate('reports');
+              }
+            }}
+            disabled={!hasData}
+            title={!hasData ? "Complete your assessment to generate your personalized report." : "Download your PDF report"}
+            className={`text-xs font-semibold py-2.5 px-4 rounded-lg border transition-all ${
+              !hasData 
+                ? 'opacity-60 cursor-not-allowed bg-gray-500/5 text-gray-500 border-gray-400/20' 
+                : isDarkMode 
+                  ? 'border-brand-dark-surface hover:bg-brand-dark-surface text-white' 
+                  : 'border-gray-200 hover:bg-gray-100 text-gray-700'
+            }`}
             id="dash-btn-report"
           >
-            Download Report Audit
+            {!hasData ? "Complete your assessment to generate your personalized report." : "📄 Download Report"}
           </button>
         </div>
       </div>
@@ -309,7 +341,7 @@ export default function Dashboard({
           <div className="mt-4" id="kpi-m3-val">
             <p className="text-3xl font-bold tracking-tight font-display">{hasData ? `${sustainabilityScore}` : '—'}<span className="text-lg font-mono text-gray-400">/100</span></p>
             {hasData ? (
-              <div className="flex items-center space-x-1 mt-1 text-xs text-emerald-400">
+              <div className="flex items-center space-x-1 mt-1 text-xs text-brand-primary">
                 <Award className="w-3.5 h-3.5" />
                 <span>Excellent compliance. Level: Gold</span>
               </div>

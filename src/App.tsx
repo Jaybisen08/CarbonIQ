@@ -134,7 +134,8 @@ export default function App() {
       calculations: resolvedHistory,
       profile: {
         ...currentUser.profile,
-        sustainabilityScore: latestCalc.sustainabilityScore
+        sustainabilityScore: latestCalc.sustainabilityScore,
+        hasCompletedAssessment: true
       }
     };
     setCurrentUser(updated);
@@ -344,6 +345,8 @@ export default function App() {
     }, 600);
   };
 
+  const isAssessmentCompleted = currentUser?.profile.hasCompletedAssessment === true || (currentUser?.calculations && currentUser.calculations.length > 0);
+
   // Nav routing menu sidebar list
   const sidebarLinks = [
     { view: 'dashboard', label: 'Overview Dashboard', icon: BarChart3 },
@@ -356,6 +359,24 @@ export default function App() {
     { view: 'profile', label: 'User Demographics', icon: User },
     { view: 'settings', label: 'Settings', icon: SettingsIcon }
   ];
+
+  const resolvedLinks = sidebarLinks.map(link => {
+    if (!isAssessmentCompleted && ['dashboard', 'insights', 'goals', 'challenges', 'leaderboard', 'history'].includes(link.view)) {
+      let cleanLabel = link.label;
+      if (link.view === 'dashboard') cleanLabel = 'Dashboard';
+      else if (link.view === 'insights') cleanLabel = 'AI Insights';
+      else if (link.view === 'goals') cleanLabel = 'Goals';
+      else if (link.view === 'history') cleanLabel = 'History';
+      else if (link.view === 'challenges') cleanLabel = 'Campaigns';
+      else if (link.view === 'leaderboard') cleanLabel = 'Leaderboard';
+      
+      return {
+        ...link,
+        label: `🔒 ${cleanLabel}`
+      };
+    }
+    return link;
+  });
 
   /* ---------------------------------------------------- */
   /* Main routing switches rendering                      */
@@ -415,7 +436,7 @@ export default function App() {
 
           {/* Navigation Items stack */}
           <nav className="p-4 space-y-1" id="side-nav">
-            {sidebarLinks.map((link) => {
+            {resolvedLinks.map((link) => {
               const Icon = link.icon;
               const isActive = activeView === link.view;
 
@@ -475,7 +496,7 @@ export default function App() {
             <div className="pb-3 border-b border-gray-400/10 text-xs text-gray-400" id="mob-profile-header">
               <span className="font-bold">{currentUser.profile.firstName} ({currentUser.profile.points} pts)</span>
             </div>
-            {sidebarLinks.map((link) => {
+            {resolvedLinks.map((link) => {
               const Icon = link.icon;
               return (
                 <button
@@ -499,19 +520,145 @@ export default function App() {
         {/* PRIMARY ACTIVE INTERFACE SHEET */}
         <main className="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full" id="main-content-sheet">
           
-          {activeView === 'dashboard' && (
-            <Dashboard 
-              calculations={currentUser.calculations}
-              isDarkMode={isDarkMode}
-              userName={currentUser.profile.firstName}
-              onNavigate={(v) => {
-                if (v === 'reports') {
-                  triggerPdfReportCompile();
-                } else {
-                  setActiveView(v);
-                }
-              }}
-            />
+          {!isAssessmentCompleted && ['dashboard', 'insights', 'goals', 'challenges', 'leaderboard', 'history'].includes(activeView) ? (
+            activeView === 'dashboard' ? (
+              <div className={`p-8 md:p-12 rounded-2xl border text-center space-y-8 max-w-2xl mx-auto relative overflow-hidden ${isDarkMode ? 'bg-brand-dark-surface/30 border-brand-dark-surface text-white' : 'bg-white border-gray-200 text-gray-900 shadow-xl'}`} id="welcome-lock-screen">
+                <div className="absolute top-0 left-0 w-full h-1 bg-brand-primary"></div>
+                
+                <h1 className="text-3xl font-extrabold font-display leading-tight flex flex-col items-center">
+                  <span className="text-xl mb-1 text-gray-400">👋 Welcome to CarbonIQ</span>
+                  <span className="text-brand-primary text-2xl font-bold mt-2">Let's personalize your sustainability journey</span>
+                </h1>
+
+                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} leading-relaxed max-w-md mx-auto`}>
+                  Complete a short Carbon Footprint Assessment to unlock:
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-sm mx-auto text-left py-4 px-6 rounded-xl bg-gray-500/5 font-mono text-xs" id="welcome-bullet-grid">
+                  <div className="flex items-center space-x-2 text-emerald-400 font-bold">
+                    <span>✅</span>
+                    <span>Dashboard</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-emerald-400 font-bold">
+                    <span>✅</span>
+                    <span>AI Insights</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-emerald-400 font-bold">
+                    <span>✅</span>
+                    <span>Goals</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-emerald-400 font-bold">
+                    <span>✅</span>
+                    <span>Reports</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-emerald-400 font-bold sm:col-span-2 justify-center">
+                    <span>✅</span>
+                    <span>Carbon Analytics</span>
+                  </div>
+                </div>
+
+                <div className="space-y-4 mt-6" id="welcome-time-meter">
+                  <div className="text-xs text-gray-400 font-semibold" id="est">
+                    Estimated time: <span className="text-brand-primary font-bold">2-3 minutes</span>
+                  </div>
+                  <button 
+                    onClick={() => setActiveView('calculator')}
+                    className="bg-brand-primary hover:bg-brand-accent text-brand-dark-bg font-bold py-3.5 px-8 rounded-xl shadow-md transition-all text-sm uppercase tracking-wider inline-block cursor-pointer font-display"
+                    id="btn-start-welcome-assessment"
+                  >
+                    Start Assessment
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className={`p-8 md:p-12 rounded-2xl border text-center space-y-6 max-w-md mx-auto relative overflow-hidden ${isDarkMode ? 'bg-brand-dark-surface/30 border-brand-dark-surface text-white' : 'bg-white border-gray-200 text-gray-950 shadow-xl'}`} id="generic-locked-screen">
+                <div className="absolute top-0 left-0 w-full h-1 bg-amber-500"></div>
+                
+                <div className="mx-auto bg-brand-primary/10 w-12 h-12 rounded-full flex items-center justify-center text-brand-primary text-xl" id="lock-bubble">
+                  🔒
+                </div>
+
+                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} leading-relaxed font-semibold`}>
+                  This feature will be available after completing your Carbon Footprint Assessment.
+                </p>
+
+                <button 
+                  onClick={() => setActiveView('calculator')}
+                  className="bg-brand-primary hover:bg-brand-accent text-brand-dark-bg font-bold py-2.5 px-6 rounded-lg text-xs uppercase tracking-wider cursor-pointer font-display"
+                  id="btn-complete-lock-assessment"
+                >
+                  Complete Assessment
+                </button>
+              </div>
+            )
+          ) : (
+            <>
+              {activeView === 'dashboard' && (
+                <Dashboard 
+                  calculations={currentUser.calculations}
+                  isDarkMode={isDarkMode}
+                  userName={currentUser.profile.firstName}
+                  isDemoMode={currentUser.email === 'demo@carboniq.com' || currentUser.email === 'sarah.chen@example.com'}
+                  onNavigate={(v) => {
+                    if (v === 'reports') {
+                      triggerPdfReportCompile();
+                    } else {
+                      setActiveView(v);
+                    }
+                  }}
+                />
+              )}
+
+              {activeView === 'insights' && (
+                <Insights 
+                  userEmail={currentUser.email}
+                  isDarkMode={isDarkMode}
+                  recommendations={currentUser.recommendations}
+                  onRecommendationsLoaded={(nextList) => {
+                    const updated = { ...currentUser, recommendations: nextList };
+                    setCurrentUser(updated);
+                    localStorage.setItem('authenticated_user', JSON.stringify(updated));
+                  }}
+                  onAddGoal={handleAddGoal}
+                  goals={currentUser.goals}
+                />
+              )}
+
+              {activeView === 'goals' && (
+                <Goals 
+                  goals={currentUser.goals}
+                  isDarkMode={isDarkMode}
+                  onAddGoal={handleAddGoal}
+                  onUpdateGoal={handleUpdateGoal}
+                  onDeleteGoal={handleDeleteGoal}
+                />
+              )}
+
+              {activeView === 'challenges' && (
+                <Challenges 
+                  challenges={currentUser.challenges}
+                  isDarkMode={isDarkMode}
+                  onJoinChallenge={handleJoinChallenge}
+                  onLeaveChallenge={handleLeaveChallenge}
+                  onCompleteChallenge={handleCompleteChallenge}
+                />
+              )}
+
+              {activeView === 'leaderboard' && (
+                <Leaderboard 
+                  userEmail={currentUser.email}
+                  isDarkMode={isDarkMode}
+                  currentUserPoints={currentUser.profile.points}
+                />
+              )}
+
+              {activeView === 'history' && (
+                <History 
+                  calculations={currentUser.calculations}
+                  isDarkMode={isDarkMode}
+                />
+              )}
+            </>
           )}
 
           {activeView === 'calculator' && (
@@ -521,56 +668,6 @@ export default function App() {
               onCalculationCompleted={handleUpdateCalculationInState}
               currentProfileDiet={currentUser.profile.dietType}
               currentProfileTransport={currentUser.profile.primaryTransport}
-            />
-          )}
-
-          {activeView === 'insights' && (
-            <Insights 
-              userEmail={currentUser.email}
-              isDarkMode={isDarkMode}
-              recommendations={currentUser.recommendations}
-              onRecommendationsLoaded={(nextList) => {
-                const updated = { ...currentUser, recommendations: nextList };
-                setCurrentUser(updated);
-                localStorage.setItem('authenticated_user', JSON.stringify(updated));
-              }}
-              onAddGoal={handleAddGoal}
-              goals={currentUser.goals}
-            />
-          )}
-
-          {activeView === 'goals' && (
-            <Goals 
-              goals={currentUser.goals}
-              isDarkMode={isDarkMode}
-              onAddGoal={handleAddGoal}
-              onUpdateGoal={handleUpdateGoal}
-              onDeleteGoal={handleDeleteGoal}
-            />
-          )}
-
-          {activeView === 'challenges' && (
-            <Challenges 
-              challenges={currentUser.challenges}
-              isDarkMode={isDarkMode}
-              onJoinChallenge={handleJoinChallenge}
-              onLeaveChallenge={handleLeaveChallenge}
-              onCompleteChallenge={handleCompleteChallenge}
-            />
-          )}
-
-          {activeView === 'leaderboard' && (
-            <Leaderboard 
-              userEmail={currentUser.email}
-              isDarkMode={isDarkMode}
-              currentUserPoints={currentUser.profile.points}
-            />
-          )}
-
-          {activeView === 'history' && (
-            <History 
-              calculations={currentUser.calculations}
-              isDarkMode={isDarkMode}
             />
           )}
 

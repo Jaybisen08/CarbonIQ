@@ -25,14 +25,14 @@ export function generateCarbonReport(
   };
 
   // Theme colors
-  const primaryColor = [82, 183, 136]; // #52B788
-  const darkBg = [8, 28, 21]; // #081C15
+  const primaryColor = [37, 99, 235]; // #2563EB
+  const darkBg = [9, 9, 11]; // #09090B
   const greyColor = [120, 120, 120];
 
   // Helper function to draw header banners
   const drawPageBorderAndHeader = (pageNum: number) => {
     // Elegant border lines
-    doc.setDrawColor(216, 243, 220);
+    doc.setDrawColor(228, 228, 231);
     doc.setLineWidth(0.3);
     doc.rect(8, 8, 194, 281);
 
@@ -49,7 +49,7 @@ export function generateCarbonReport(
   drawPageBorderAndHeader(1);
 
   // CarbonIQ Title Block
-  doc.setFillColor(8, 28, 21);
+  doc.setFillColor(9, 9, 11);
   doc.rect(12, 24, 186, 30, 'F');
   
   doc.setFont('Helvetica', 'bold');
@@ -59,17 +59,17 @@ export function generateCarbonReport(
 
   doc.setFont('Helvetica', 'normal');
   doc.setFontSize(10);
-  doc.setTextColor(82, 183, 136);
+  doc.setTextColor(37, 99, 235);
   doc.text('PREMIUM CLIMATE ANALYTICS & DECARBONIZATION SCHEDULER', 20, 48);
 
   // Profile Details Card
-  doc.setDrawColor(180, 180, 180);
-  doc.setFillColor(245, 248, 246);
+  doc.setDrawColor(228, 228, 231);
+  doc.setFillColor(245, 245, 244);
   doc.rect(12, 60, 186, 36, 'FD');
 
   doc.setFont('Helvetica', 'bold');
   doc.setFontSize(11);
-  doc.setTextColor(8, 28, 21);
+  doc.setTextColor(24, 24, 27);
   doc.text('INTEL AUDIT TARGET (USER PROFILE)', 16, 66);
 
   doc.setFont('Helvetica', 'normal');
@@ -89,18 +89,18 @@ export function generateCarbonReport(
   // Executive Metrics Dashboard section
   doc.setFont('Helvetica', 'bold');
   doc.setFontSize(13);
-  doc.setTextColor(8, 28, 21);
+  doc.setTextColor(24, 24, 27);
   doc.text('1. EXECUTIVE CLIMATE METRICS', 12, 107);
   doc.line(12, 109, 198, 109);
 
   // Large score bubble
-  doc.setDrawColor(82, 183, 136);
+  doc.setDrawColor(37, 99, 235);
   doc.setFillColor(255, 255, 255);
   doc.circle(52, 134, 18, 'FD');
 
   doc.setFont('Helvetica', 'bold');
   doc.setFontSize(28);
-  doc.setTextColor(8, 28, 21);
+  doc.setTextColor(24, 24, 27);
   doc.text(`${newestCalc.sustainabilityScore}`, 52, 138, { align: 'center' });
   
   doc.setFont('Helvetica', 'normal');
@@ -110,17 +110,17 @@ export function generateCarbonReport(
   doc.text('SCORE (0-100)', 52, 149, { align: 'center' });
 
   // Value cards next to it
-  doc.setFillColor(245, 248, 246);
+  doc.setFillColor(245, 245, 244);
   doc.rect(85, 116, 113, 36, 'F');
   
   doc.setFont('Helvetica', 'bold');
   doc.setFontSize(10);
-  doc.setTextColor(8, 28, 21);
+  doc.setTextColor(24, 24, 27);
   doc.text('MONTHLY CARBON FOOTPRINT', 89, 122);
 
   doc.setFont('Helvetica', 'normal');
   doc.setFontSize(20);
-  doc.setTextColor(82, 183, 136);
+  doc.setTextColor(37, 99, 235);
   doc.text(`${newestCalc.total} kg`, 89, 133);
 
   doc.setFont('Helvetica', 'normal');
@@ -132,7 +132,7 @@ export function generateCarbonReport(
   // Carbon Breakdown Category Lists
   doc.setFont('Helvetica', 'bold');
   doc.setFontSize(11);
-  doc.setTextColor(8, 28, 21);
+  doc.setTextColor(24, 24, 27);
   doc.text('CARBON FOOTPRINT DETAILED BREAKDOWN', 12, 162);
   
   doc.setFont('Helvetica', 'normal');
@@ -141,7 +141,7 @@ export function generateCarbonReport(
   doc.text('Calculated monthly footprint across four core lifestyle emission vectors (measured in kg CO2e):', 12, 166);
 
   // Simple clean table of categories
-  doc.setFillColor(8, 28, 21);
+  doc.setFillColor(9, 9, 11);
   doc.rect(12, 172, 186, 7, 'F');
   
   doc.setFont('Helvetica', 'bold');
@@ -161,7 +161,7 @@ export function generateCarbonReport(
   let currentY = 184;
   categories.forEach((cat) => {
     // Row background
-    doc.setFillColor(250, 252, 250);
+    doc.setFillColor(245, 245, 244);
     doc.rect(12, currentY - 5, 186, 7, 'F');
 
     doc.setFont('Helvetica', 'normal');
@@ -178,7 +178,7 @@ export function generateCarbonReport(
   // Goal & Milestone summary
   doc.setFont('Helvetica', 'bold');
   doc.setFontSize(13);
-  doc.setTextColor(8, 28, 21);
+  doc.setTextColor(24, 24, 27);
   doc.text('2. ACTIVE DECARBONIZATION PLANS', 12, 224);
   doc.line(12, 226, 198, 226);
 
@@ -197,12 +197,12 @@ export function generateCarbonReport(
     let goalY = 239;
     userGoals.forEach((goal) => {
       // Small container
-      doc.setDrawColor(216, 243, 220);
+      doc.setDrawColor(228, 228, 231);
       doc.rect(12, goalY - 4, 186, 12);
       
       doc.setFont('Helvetica', 'bold');
       doc.setFontSize(9);
-      doc.setTextColor(8, 28, 21);
+      doc.setTextColor(24, 24, 27);
       doc.text(goal.title.toUpperCase(), 16, goalY + 1);
 
       doc.setFont('Helvetica', 'normal');
@@ -231,7 +231,7 @@ export function generateCarbonReport(
 
   doc.setFont('Helvetica', 'bold');
   doc.setFontSize(13);
-  doc.setTextColor(8, 28, 21);
+  doc.setTextColor(24, 24, 27);
   doc.text('3. CLIMATE TREND INTELLIGENCE', 12, 24);
   doc.line(12, 26, 198, 26);
 
@@ -244,7 +244,7 @@ export function generateCarbonReport(
   // Draw simple text list representation of emission reduction trends
   doc.setFont('Helvetica', 'bold');
   doc.setFontSize(9);
-  doc.setTextColor(8, 28, 21);
+  doc.setTextColor(24, 24, 27);
   let trendY = 40;
   
   if (history.length < 2) {
@@ -253,12 +253,12 @@ export function generateCarbonReport(
     doc.text('Baseline calibration initialized. Longitudinal trend analyses require multiple records.', 16, trendY);
   } else {
     // Category summaries
-    doc.setFillColor(245, 248, 246);
+    doc.setFillColor(245, 245, 244);
     doc.rect(12, trendY - 4, 186, 32, 'F');
 
     doc.setFont('Helvetica', 'bold');
     doc.setFontSize(9);
-    doc.setTextColor(8, 28, 21);
+    doc.setTextColor(24, 24, 27);
     doc.text('AUDIT PERIOD', 16, trendY + 2);
     doc.text('TRANSPORTATION', 60, trendY + 2);
     doc.text('ELECTRICITY', 98, trendY + 2);
@@ -277,7 +277,7 @@ export function generateCarbonReport(
       doc.text(`${record.electricity} kg`, 98, rowY);
       doc.text(`${record.food} kg`, 135, rowY);
       doc.setFont('Helvetica', 'bold');
-      doc.setTextColor(82, 183, 136);
+      doc.setTextColor(37, 99, 235);
       doc.text(`${record.total} kg`, 165, rowY);
       doc.setFont('Helvetica', 'normal');
       doc.setTextColor(80, 80, 80);
@@ -291,7 +291,7 @@ export function generateCarbonReport(
     
     doc.setFont('Helvetica', 'bold');
     doc.setFontSize(10);
-    doc.setTextColor(8, 28, 21);
+    doc.setTextColor(24, 24, 27);
     
     if (diff > 0) {
       doc.text(`IMPACT CONTEXT: DECARBONIZATION REDUCTION OF ${diff} kg/month MEASURED.`, 12, 80);
@@ -305,7 +305,7 @@ export function generateCarbonReport(
   // Section 4: AI Recommendations
   doc.setFont('Helvetica', 'bold');
   doc.setFontSize(13);
-  doc.setTextColor(8, 28, 21);
+  doc.setTextColor(24, 24, 27);
   doc.text('4. CUSTOMIZED INTELLIGENCE RECOMMENDATIONS', 12, 92);
   doc.line(12, 94, 198, 94);
 
@@ -324,14 +324,14 @@ export function generateCarbonReport(
       { t: 'Transition commuting to battery electric vehicles', c: 'transportation', s: 840, d: 'Medium', i: 95, desc: 'Saves around 4.6 metric tons of tailpipe carbon discharges per calendar year.' }
     ];
     dummyRecs.forEach((r) => {
-      doc.setFillColor(248, 252, 249);
+      doc.setFillColor(245, 245, 244);
       doc.rect(12, recY - 4, 186, 24, 'F');
-      doc.setDrawColor(82, 183, 136);
+      doc.setDrawColor(37, 99, 235);
       doc.line(12, recY - 4, 12, recY + 20);
 
       doc.setFont('Helvetica', 'bold');
       doc.setFontSize(10);
-      doc.setTextColor(8, 28, 21);
+      doc.setTextColor(24, 24, 27);
       doc.text(r.t.toUpperCase(), 16, recY + 1);
 
       doc.setFont('Helvetica', 'normal');
@@ -341,7 +341,7 @@ export function generateCarbonReport(
 
       doc.setFont('Helvetica', 'bold');
       doc.setFontSize(8);
-      doc.setTextColor(82, 183, 136);
+      doc.setTextColor(37, 99, 235);
       doc.text(`CO2 SAVINGS: ${r.s}kg CO2e/yr`, 16, recY + 17);
       doc.text(`DIFFICULTY: ${r.d}`, 90, recY + 17);
       doc.text(`IMPACT SCORE: ${r.i}/100`, 150, recY + 17);
@@ -349,14 +349,14 @@ export function generateCarbonReport(
     });
   } else {
     userRecs.forEach((rec) => {
-      doc.setFillColor(248, 252, 249);
+      doc.setFillColor(245, 245, 244);
       doc.rect(12, recY - 4, 186, 24, 'F');
-      doc.setDrawColor(82, 183, 136);
+      doc.setDrawColor(37, 99, 235);
       doc.line(12, recY - 4, 12, recY + 20);
 
       doc.setFont('Helvetica', 'bold');
       doc.setFontSize(10);
-      doc.setTextColor(8, 28, 21);
+      doc.setTextColor(24, 24, 27);
       doc.text(rec.title.toUpperCase(), 16, recY + 1);
 
       doc.setFont('Helvetica', 'normal');
@@ -366,7 +366,7 @@ export function generateCarbonReport(
 
       doc.setFont('Helvetica', 'bold');
       doc.setFontSize(8);
-      doc.setTextColor(82, 183, 136);
+      doc.setTextColor(37, 99, 235);
       doc.text(`CO2 SAVINGS: ${rec.co2Savings}kg CO2e/yr`, 16, recY + 17);
       doc.text(`DIFFICULTY: ${rec.difficulty}`, 90, recY + 17);
       doc.text(`IMPACT SCORE: ${rec.impactScore}/100`, 150, recY + 17);
@@ -377,7 +377,7 @@ export function generateCarbonReport(
   // Section 5: Achievements & Badges
   doc.setFont('Helvetica', 'bold');
   doc.setFontSize(13);
-  doc.setTextColor(8, 28, 21);
+  doc.setTextColor(24, 24, 27);
   doc.text('5. SUSTAINABLE MILESTONES & ACHIEVEMENTS', 12, 202);
   doc.line(12, 204, 198, 204);
 
@@ -389,7 +389,7 @@ export function generateCarbonReport(
   if (profile.badges && profile.badges.length > 0) {
     let badgeX = 14;
     profile.badges.forEach((badge) => {
-      doc.setFillColor(8, 28, 21);
+      doc.setFillColor(9, 9, 11);
       doc.rect(badgeX, 216, 42, 10, 'F');
       
       doc.setFont('Helvetica', 'bold');
@@ -408,7 +408,7 @@ export function generateCarbonReport(
   // Signature Block
   doc.setFont('Helvetica', 'bold');
   doc.setFontSize(10);
-  doc.setTextColor(8, 28, 21);
+  doc.setTextColor(24, 24, 27);
   doc.text('CLIMATE COMPLIANCE STATEMENT', 12, 246);
   
   doc.setFont('Helvetica', 'normal');
@@ -418,12 +418,12 @@ export function generateCarbonReport(
   doc.text('Prepared on-demand via the CarbonIQ server-side calculation grid engines.', 12, 254);
 
   // CarbonIQ Official Crest
-  doc.setFillColor(82, 183, 136);
+  doc.setFillColor(37, 99, 235);
   doc.rect(160, 240, 30, 14, 'F');
   
   doc.setFont('Helvetica', 'bold');
   doc.setFontSize(10);
-  doc.setTextColor(8, 28, 21);
+  doc.setTextColor(24, 24, 27);
   doc.text('CARBONIQ', 175, 247, { align: 'center' });
   
   doc.setFont('Helvetica', 'normal');
