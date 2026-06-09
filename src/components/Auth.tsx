@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
-import { safeFetchJson } from '../utils/api';
+import { loginLocalUser, registerLocalUser, DEMO_EMAIL } from '../utils/localDb';
 import { Leaf, ArrowRight, Shield, RefreshCw, Key, Mail, User, MapPin, Briefcase } from 'lucide-react';
 
 interface AuthProps {
@@ -35,43 +35,43 @@ export default function Auth({
     setLoading(true);
     setErrorMsg('');
 
-    const targetUrl = isLogin ? '/api/auth/login' : '/api/auth/register';
-    const payload = isLogin 
-      ? { email: formData.email, password: formData.password }
-      : { 
-          password: formData.password, 
-          profile: {
-            email: formData.email,
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            city: formData.city,
-            state: formData.state,
-            country: formData.country,
-            occupation: formData.occupation,
-            isStudent: false,
-            householdSize: 1,
-            primaryTransport: 'Public',
-            points: 450,
-            badges: ['Green Core']
-          } 
-        };
-
     try {
-      const response = await fetch(targetUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      // Small artificial delay to mimic authentication verification check
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
-      const data = await safeFetchJson(response);
+      let userRecord;
+      if (isLogin) {
+        userRecord = loginLocalUser(formData.email, formData.password);
+      } else {
+        const initialProfile: UserProfile = {
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          age: 30,
+          gender: 'Not Specified',
+          city: formData.city,
+          state: formData.state,
+          country: formData.country,
+          occupation: formData.occupation,
+          isStudent: false,
+          dietType: 'Flexitarian',
+          householdSize: 1,
+          primaryTransport: 'Public',
+          prefSustainabilityTips: true,
+          prefEmailNotifications: true,
+          points: 450,
+          badges: ['Green Core']
+        };
+        userRecord = registerLocalUser(formData.password, initialProfile);
+      }
 
       onAuthSuccess({
         email: formData.email,
-        profile: data.profile,
-        calculations: data.calculations,
-        goals: data.goals,
-        challenges: data.challenges,
-        recommendations: data.recommendations
+        profile: userRecord.profile,
+        calculations: userRecord.calculations,
+        goals: userRecord.goals,
+        challenges: userRecord.challenges,
+        recommendations: userRecord.recommendations
       });
     } catch (err: any) {
       setErrorMsg(err.message || 'Connecting offline.');

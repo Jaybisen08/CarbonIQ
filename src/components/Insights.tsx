@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Recommendation, Goal } from '../types';
-import { safeFetchJson } from '../utils/api';
+import { generateLocalRecommendations } from '../utils/localDb';
 import { Cpu, Leaf, BrainCircuit, ArrowRight, Zap, Target, Flame, Lightbulb, RefreshCw, Layers, Sparkles, Check } from 'lucide-react';
 
 interface InsightsProps {
@@ -51,18 +51,15 @@ export default function Insights({
     }, 450);
 
     try {
-      const response = await fetch('/api/insights/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: userEmail })
-      });
-
-      const data = await safeFetchJson(response);
+      // Add a slight artificial delay so that user can read our high-fidelity generation logs
+      await new Promise((resolve) => setTimeout(resolve, 2200));
+      
+      const recommendationsList = generateLocalRecommendations(userEmail);
       clearInterval(logInterval);
 
-      onRecommendationsLoaded(data.recommendations);
+      onRecommendationsLoaded(recommendationsList);
     } catch (err: any) {
-      setErrorMsg(err.message || 'Connecting failure');
+      setErrorMsg(err.message || 'Error formulating intelligent guidelines.');
     } finally {
       setLoading(false);
     }

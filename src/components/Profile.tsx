@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
-import { safeFetchJson } from '../utils/api';
+import { updateLocalProfile } from '../utils/localDb';
 import { User, Award, Shield, MapPin, Briefcase, Calendar, RefreshCw } from 'lucide-react';
 
 interface ProfileProps {
@@ -38,21 +38,11 @@ export default function Profile({
     setSuccessMsg('');
 
     try {
-      const response = await fetch('/api/auth/profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: userEmail,
-          profileUpdates: formData
-        })
-      });
-
-      const data = await safeFetchJson<UserProfile>(response);
-
+      const data = updateLocalProfile(userEmail, formData);
       onUpdateProfile(data);
       setSuccessMsg('Profile updated successfully.');
     } catch (err: any) {
-      setErrorMsg(err.message || 'Connection offline');
+      setErrorMsg(err.message || 'Error updating profile');
     } finally {
       setLoading(false);
     }

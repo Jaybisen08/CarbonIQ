@@ -12,7 +12,18 @@ import Profile from './components/Profile';
 import Settings from './components/Settings';
 import { generateCarbonReport } from './utils/pdfGenerator';
 import { EmissionsBreakdown, UserProfile, Goal, Challenge, Recommendation } from './types';
-import { safeFetchJson } from './utils/api';
+import { 
+  initializeLocalDB, 
+  loginLocalUser, 
+  addLocalGoal, 
+  updateLocalGoal, 
+  deleteLocalGoal, 
+  joinLocalChallenge, 
+  leaveLocalChallenge, 
+  completeLocalChallenge,
+  saveLocalUser, 
+  DEMO_EMAIL 
+} from './utils/localDb';
 import { 
   Leaf, BarChart3, Cpu, Target, Trophy, Clock, User, 
   Settings as SettingsIcon, LogOut, Menu, X, Shield, RefreshCw 
@@ -48,6 +59,10 @@ export default function App() {
 
   // Sync theme
   useEffect(() => {
+    initializeLocalDB();
+  }, []);
+
+  useEffect(() => {
     localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -66,52 +81,17 @@ export default function App() {
   // Launch live mock/demo profile directly from public landing page
   const handleTryDemo = async () => {
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: 'demo@carboniq.com', password: '' })
-      });
-      const data = await safeFetchJson(response);
+      const userRecord = loginLocalUser(DEMO_EMAIL, 'demosecret');
       handleAuthSuccess({
-        email: 'demo@carboniq.com',
-        profile: data.profile,
-        calculations: data.calculations,
-        goals: data.goals,
-        challenges: data.challenges,
-        recommendations: data.recommendations
+        email: DEMO_EMAIL,
+        profile: userRecord.profile,
+        calculations: userRecord.calculations,
+        goals: userRecord.goals,
+        challenges: userRecord.challenges,
+        recommendations: userRecord.recommendations
       });
     } catch (err) {
-      // Fallback local construct if server call fails
-      const localDemo = {
-        email: 'sarah.chen@example.com',
-        profile: {
-          email: 'sarah.chen@example.com',
-          firstName: 'Sarah',
-          lastName: 'Chen',
-          city: 'San Francisco',
-          state: 'CA',
-          country: 'United States',
-          occupation: 'Sustainability Architect',
-          isStudent: false,
-          householdSize: 2,
-          primaryTransport: 'Electric',
-          points: 1250,
-          badges: ['Eco Titan', 'Zero Waste Pro']
-        },
-        calculations: [
-          { date: 'Mar 2026', transportation: 180, electricity: 140, food: 110, lifestyle: 85, total: 515, sustainabilityScore: 78 },
-          { date: 'Apr 2026', transportation: 140, electricity: 120, food: 95, lifestyle: 60, total: 415, sustainabilityScore: 84 },
-          { date: 'May 2026', transportation: 80, electricity: 95, food: 65, lifestyle: 45, total: 285, sustainabilityScore: 92 }
-        ],
-        goals: [
-          { id: 'g1', title: 'Adopt Electric Rideshare transit', description: 'Switch highway commuting from private internal combustion to battery EVs.', category: 'transportation', targetValue: 120, currentValue: 80, deadline: '2026-08-31', completed: false }
-        ],
-        challenges: [
-          { id: 'ch1', title: 'Vampire Draw Slayer', description: 'Shut down all electrical standbys overnight.', category: 'electricity', duration: '7 days', points: 150, joined: true, completed: false }
-        ],
-        recommendations: []
-      };
-      handleAuthSuccess(localDemo);
+      console.error('Offline demo setup fail', err);
     }
   };
 
@@ -137,23 +117,24 @@ export default function App() {
     };
     setCurrentUser(updated);
     localStorage.setItem('authenticated_user', JSON.stringify(updated));
+    // Sync state to local user db record as well
+    saveLocalUser(currentUser.email, {
+      profile: updated.profile,
+      passwordHash: 'demosecret',
+      calculations: updated.calculations,
+      goals: updated.goals,
+      challenges: updated.challenges,
+      recommendations: updated.recommendations
+    });
+
     setActiveView('dashboard'); // take them back to principal graphs overview!
   };
 
   const handleAddGoal = async (goalData: Omit<Goal, 'id' | 'completed' | 'currentValue'>) => {
     if (!currentUser) return;
     try {
-      const response = await fetch('/api/goals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: currentUser.email,
-          action: 'add',
-          goalData
-        })
-      });
-      const data = await safeFetchJson(response);
-      const updated = { ...currentUser, goals: data };
+      const gList = addLocalGoal(currentUser.email, goalData);
+      const updated = { ...currentUser, goals: gList };
       setCurrentUser(updated);
       localStorage.setItem('authenticated_user', JSON.stringify(updated));
     } catch (err) {
@@ -164,38 +145,14 @@ export default function App() {
   const handleUpdateGoal = async (goalId: string, updates: Partial<Goal>) => {
     if (!currentUser) return;
     try {
-      const response = await fetch('/api/goals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: currentUser.email,
-          action: 'update',
-          goalId,
-          goalData: updates
-        })
-      });
-      const data = await safeFetchJson(response);
-      // If a goal got completed, award points automatically on the user profile!
-      let nextPoints = currentUser.profile.points;
-      if (updates.completed) {
-        nextPoints += 100;
-        const profRes = await fetch('/api/auth/profile', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: currentUser.email,
-            profileUpdates: { points: nextPoints, badges: [...currentUser.profile.badges, 'Goal Breaker'] }
-          })
-        });
-        await safeFetchJson(profRes);
-      }
-
+      const resObj = updateLocalGoal(currentUser.email, goalId, updates);
       const updated = { 
         ...currentUser, 
-        goals: data,
+        goals: resObj.goals,
         profile: {
           ...currentUser.profile,
-          points: nextPoints
+          points: resObj.newPoints,
+          badges: resObj.newBadges
         }
       };
       setCurrentUser(updated);
@@ -208,17 +165,8 @@ export default function App() {
   const handleDeleteGoal = async (goalId: string) => {
     if (!currentUser) return;
     try {
-      const response = await fetch('/api/goals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: currentUser.email,
-          action: 'delete',
-          goalId
-        })
-      });
-      const data = await safeFetchJson(response);
-      const updated = { ...currentUser, goals: data };
+      const gList = deleteLocalGoal(currentUser.email, goalId);
+      const updated = { ...currentUser, goals: gList };
       setCurrentUser(updated);
       localStorage.setItem('authenticated_user', JSON.stringify(updated));
     } catch (err) {
@@ -229,17 +177,8 @@ export default function App() {
   const handleJoinChallenge = async (challengeId: string) => {
     if (!currentUser) return;
     try {
-      const response = await fetch('/api/challenges', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: currentUser.email,
-          action: 'join',
-          challengeId
-        })
-      });
-      const data = await safeFetchJson(response);
-      const updated = { ...currentUser, challenges: data };
+      const cList = joinLocalChallenge(currentUser.email, challengeId);
+      const updated = { ...currentUser, challenges: cList };
       setCurrentUser(updated);
       localStorage.setItem('authenticated_user', JSON.stringify(updated));
     } catch (err) {
@@ -250,17 +189,8 @@ export default function App() {
   const handleLeaveChallenge = async (challengeId: string) => {
     if (!currentUser) return;
     try {
-      const response = await fetch('/api/challenges', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: currentUser.email,
-          action: 'leave',
-          challengeId
-        })
-      });
-      const data = await safeFetchJson(response);
-      const updated = { ...currentUser, challenges: data };
+      const cList = leaveLocalChallenge(currentUser.email, challengeId);
+      const updated = { ...currentUser, challenges: cList };
       setCurrentUser(updated);
       localStorage.setItem('authenticated_user', JSON.stringify(updated));
     } catch (err) {
@@ -271,37 +201,14 @@ export default function App() {
   const handleCompleteChallenge = async (challengeId: string) => {
     if (!currentUser) return;
     try {
-      const response = await fetch('/api/challenges', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: currentUser.email,
-          action: 'complete',
-          challengeId
-        })
-      });
-      const data = await safeFetchJson(response);
-      // Quantify points
-      const targetChallenge = currentUser.challenges.find(c => c.id === challengeId);
-      const ptsGranted = targetChallenge ? targetChallenge.points : 100;
-      const nextPoints = currentUser.profile.points + ptsGranted;
-
-      const profRes = await fetch('/api/auth/profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: currentUser.email,
-          profileUpdates: { points: nextPoints }
-        })
-      });
-      await safeFetchJson(profRes);
-
+      const resObj = completeLocalChallenge(currentUser.email, challengeId);
       const updated = { 
         ...currentUser, 
-        challenges: data,
+        challenges: resObj.challenges,
         profile: {
           ...currentUser.profile,
-          points: nextPoints
+          points: resObj.newPoints,
+          badges: resObj.newBadges
         }
       };
       setCurrentUser(updated);

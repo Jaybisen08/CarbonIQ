@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Settings as SettingsIcon, Shield, RefreshCw, Sun, Moon, Info, Key, Database } from 'lucide-react';
-import { safeFetchJson } from '../utils/api';
+import { resetLocalUser } from '../utils/localDb';
 
 interface SettingsProps {
   isDarkMode: boolean;
@@ -21,23 +21,18 @@ export default function Settings({
       setResetting(true);
       setMsg(null);
       try {
-        const response = await fetch('/api/auth/reset', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: userEmail })
-        });
-        const data = await safeFetchJson(response);
-        if (data.success) {
+        const success = resetLocalUser(userEmail);
+        if (success) {
           setMsg({ text: 'Database reset successful! Reloading application session...', error: false });
           setTimeout(() => {
             window.location.reload();
           }, 1500);
         } else {
-          setMsg({ text: data.error || 'Failed to reset database.', error: true });
+          setMsg({ text: 'Failed to reset local database.', error: true });
         }
       } catch (err: any) {
         console.error(err);
-        setMsg({ text: err.message || 'Unable to communicate with the server to wipe simulation logs.', error: true });
+        setMsg({ text: err.message || 'Unable to wipe local simulation logs.', error: true });
       } finally {
         setResetting(false);
       }

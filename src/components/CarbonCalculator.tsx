@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CarbonCalculatorData, EmissionsBreakdown } from '../types';
-import { safeFetchJson } from '../utils/api';
+import { calculateLocalEmissions } from '../utils/localDb';
 import { Car, Zap, Utensils, ShoppingBag, ArrowRight, ArrowLeft, CheckCircle, Calculator, ChevronRight, RefreshCw, Flame, Shield, Award } from 'lucide-react';
 
 interface CarbonCalculatorProps {
@@ -55,23 +55,14 @@ export default function CarbonCalculator({
       const dateOptions: Intl.DateTimeFormatOptions = { month: 'short', year: 'numeric' };
       const formattedDate = new Date().toLocaleDateString('en-US', dateOptions);
 
-      const response = await fetch('/api/calculator/calculate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: userEmail,
-          calculatorData: formData,
-          date: formattedDate
-        })
-      });
+      // Perform calculations entirely offline
+      const resultObj = calculateLocalEmissions(userEmail, formData, formattedDate);
 
-      const data = await safeFetchJson(response);
-
-      setAssessmentResult(data.latestCalculation);
-      onCalculationCompleted(data.latestCalculation, data.history);
+      setAssessmentResult(resultObj.latestCalculation);
+      onCalculationCompleted(resultObj.latestCalculation, resultObj.history);
       setStep(5); // Go to results step successfully
     } catch (err: any) {
-      setErrorMsg(err.message || 'Connection offline');
+      setErrorMsg(err.message || 'Error processing calculations.');
     } finally {
       setLoading(false);
     }
